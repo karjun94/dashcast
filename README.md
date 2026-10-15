@@ -6,8 +6,8 @@ just opens an address.
 
 It mirrors whatever is on screen, so it works with any app: maps, music, video, games and so on.
 
-**Download:** get the latest APK from [Releases](https://github.com/karjun94/dashcast/releases) or
-[chopsignpdf.online/dashcast](https://chopsignpdf.online/dashcast/). Android 10 or newer.
+**Download:** get the latest APK from [chopsignpdf.online/dashcast](https://chopsignpdf.online/dashcast/).
+Android 10 or newer.
 
 It replaces the Termux + ADB + ws-scrcpy setup:
 
