@@ -1,0 +1,458 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<title>DashCast</title>
+<style>
+  :root {
+    --glass: rgba(24, 26, 31, .78);
+    --glass-hi: rgba(52, 56, 64, .9);
+    --line: rgba(255, 255, 255, .08);
+    --text: #eceff4;
+    --muted: #9aa3b2;
+    --accent: #4f8cff;
+    --ok: #34c759;
+    --warn: #ffb020;
+    --btn: 56px;
+  }
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: var(--text);
+               font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+               -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  /* The canvas holds the frame at its native size; CSS does the letterboxed scaling on the GPU. */
+  canvas { display: block; width: 100vw; height: 100vh; object-fit: contain; touch-action: none; background: #000; }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+  svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2;
+        stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+
+  /* ---- dock: sits in the letterbox band when there is one, otherwise floats over the picture ---- */
+  .dock { position: fixed; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px;
+          background: var(--glass); border: 1px solid var(--line); border-radius: 20px;
+          -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+          box-shadow: 0 8px 30px rgba(0, 0, 0, .45); transition: opacity .35s ease; }
+  .dock.top  { top: calc(var(--band) / 2); left: 50%; transform: translate(-50%, -50%); flex-direction: row; }
+  .dock.side { right: calc(var(--band) / 2); top: 50%; transform: translate(50%, -50%); flex-direction: column; }
+  .dock.over { top: 14px; right: 14px; flex-direction: row; }
+  .dock.dim  { opacity: .28; }
+  .dock.folded { display: none; }
+  .dock button { width: var(--btn); height: var(--btn); border-radius: 14px; display: grid; place-items: center;
+                 color: var(--text); transition: background .15s ease, transform .1s ease; }
+  .dock button:active { background: var(--glass-hi); transform: scale(.94); }
+  .dock button.on { color: var(--accent); background: rgba(79, 140, 255, .14); }
+  .dock .sep { background: var(--line); flex: none; }
+  .dock.top .sep, .dock.over .sep { width: 1px; height: 32px; margin: 0 2px; }
+  .dock.side .sep { height: 1px; width: 32px; margin: 2px 0; }
+
+  #handle { position: fixed; z-index: 3; top: 14px; right: 14px; width: 44px; height: 44px; border-radius: 22px;
+            display: none; place-items: center; background: var(--glass); border: 1px solid var(--line);
+            opacity: .5; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  #handle.show { display: grid; }
+  #handle svg { width: 22px; height: 22px; }
+
+  /* ---- status card ---- */
+  #status { position: fixed; inset: 0; z-index: 2; display: grid; place-items: center; pointer-events: none;
+            transition: opacity .3s ease; }
+  #status.hidden { opacity: 0; }
+  #status .card { display: flex; align-items: center; gap: 18px; padding: 22px 28px; max-width: min(520px, 86vw);
+                  background: var(--glass); border: 1px solid var(--line); border-radius: 22px;
+                  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  #status .title { font-size: 20px; font-weight: 600; }
+  #status .detail { color: var(--muted); margin-top: 4px; }
+  .spin { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .15);
+          border-top-color: var(--accent); animation: spin .9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---- stats panel ---- */
+  #stats { position: fixed; left: 14px; bottom: 14px; z-index: 3; display: none; padding: 12px 14px;
+           background: var(--glass); border: 1px solid var(--line); border-radius: 16px;
+           font: 12.5px/1.6 ui-monospace, Menlo, Consolas, monospace; color: var(--muted);
+           -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+  #stats.show { display: block; }
+  #stats b { color: var(--text); font-weight: 600; display: inline-block; width: 64px; }
+  #stats .hint { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); color: var(--text);
+                 font-family: system-ui, sans-serif; font-size: 13px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+
+  /* ---- toast and tap feedback ---- */
+  #toast { position: fixed; left: 50%; bottom: 22px; z-index: 4; transform: translate(-50%, 20px); opacity: 0;
+           padding: 12px 18px; border-radius: 14px; background: var(--glass); border: 1px solid var(--line);
+           -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+           transition: opacity .25s ease, transform .25s ease; pointer-events: none; max-width: 80vw; text-align: center; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .tap { position: fixed; z-index: 1; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%;
+         border: 2px solid rgba(255, 255, 255, .7); background: rgba(255, 255, 255, .15); pointer-events: none;
+         animation: tap .45s ease-out forwards; }
+  @keyframes tap { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="dock" class="dock over">
+  <button data-k="back" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button data-k="home" aria-label="Home"><svg viewBox="0 0 24 24"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg></button>
+  <button data-k="recents" aria-label="Recent apps"><svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="3"/></svg></button>
+  <span class="sep"></span>
+  <button id="snd" aria-label="Sound"></button>
+  <button id="rot" aria-label="Orientation lock"></button>
+  <button id="fs" aria-label="Full screen" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button id="info" aria-label="Stats"><svg viewBox="0 0 24 24"><path d="M5 20V12M12 20V5M19 20v-5"/></svg></button>
+  <button id="fold" aria-label="Hide controls"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+</div>
+<button id="handle" aria-label="Show controls"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+
+<div id="status"><div class="card">
+  <div class="spin" id="spin"></div>
+  <div><div class="title" id="st-title">Connecting to the phone…</div><div class="detail" id="st-detail"></div></div>
+</div></div>
+
+<div id="stats"></div>
+<div id="toast"></div>
+
+<script>
+(() => {
+  // Optional tuning in the URL, e.g. http://192.168.43.1:8080/?q=50&fps=30&edge=800&lat=0.12
+  const params = new URLSearchParams(location.search);
+  const cfg = { type: 'cfg' };
+  for (const k of ['q', 'fps', 'edge']) if (params.has(k)) cfg[k] = parseInt(params.get(k), 10);
+  const LAT = Math.min(Math.max(parseFloat(params.get('lat')) || 0.15, 0.04), 1);   // audio buffer, s
+  const VIDEO = 1, AUDIO = 2;                       // first byte of each binary message
+
+  const $ = (id) => document.getElementById(id);
+  const cv = $('c');
+  const ctx = cv.getContext('2d', { alpha: false, desynchronized: true }) || cv.getContext('2d');
+  const dock = $('dock'), handle = $('handle'), statsEl = $('stats'), sndBtn = $('snd');
+  let ws = null, seq = 0, drawnSeq = 0, frames = 0, bytes = 0, lastStat = performance.now(), phone = null;
+  let imgW = 0, imgH = 0, gotFrame = false;
+  let rect = { x: 0, y: 0, w: 1, h: 1 };          // where the picture is on screen (CSS px)
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  };
+
+  // ---- status card / toast ----
+  function status(title, detail, busy = true) {
+    $('st-title').textContent = title;
+    $('st-detail').textContent = detail || '';
+    $('spin').style.display = busy ? '' : 'none';
+    $('status').classList.remove('hidden');
+  }
+  function hideStatus() { $('status').classList.add('hidden'); }
+  let toastTimer = 0;
+  function toast(text, ms = 2600) {
+    const t = $('toast');
+    t.textContent = text;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), ms);
+  }
+
+  // ---- layout ----
+  function updateRect() {
+    const r = cv.getBoundingClientRect();
+    if (!imgW) { rect = { x: r.left, y: r.top, w: r.width, h: r.height }; }
+    else {
+      const s = Math.min(r.width / imgW, r.height / imgH);       // matches object-fit: contain
+      const w = imgW * s, h = imgH * s;
+      rect = { x: r.left + (r.width - w) / 2, y: r.top + (r.height - h) / 2, w, h };
+    }
+    placeDock();
+  }
+
+  // Put the dock in an empty letterbox band if there's room, so it never covers the picture.
+  function placeDock() {
+    const top = rect.y, side = innerWidth - (rect.x + rect.w);
+    dock.classList.remove('top', 'side', 'over');
+    if (imgW && top >= 72) { dock.classList.add('top'); dock.style.setProperty('--band', top + 'px'); }
+    else if (imgW && side >= 72) { dock.classList.add('side'); dock.style.setProperty('--band', side + 'px'); }
+    else dock.classList.add('over');
+    wake();
+  }
+
+  // Floating over the picture: fade out when not in use.
+  let dimTimer = 0;
+  function wake() {
+    dock.classList.remove('dim');
+    clearTimeout(dimTimer);
+    if (dock.classList.contains('over')) dimTimer = setTimeout(() => dock.classList.add('dim'), 4000);
+  }
+  dock.addEventListener('pointerdown', wake);
+
+  function setFolded(f) {
+    dock.classList.toggle('folded', f);
+    handle.classList.toggle('show', f);
+    store.set('tc-folded', f ? '1' : '');
+    if (!f) wake();
+  }
+  $('fold').addEventListener('click', () => setFolded(true));
+  handle.addEventListener('click', () => setFolded(false));
+
+  // ---- video ----
+  function draw(bmp) {
+    if (bmp.width !== imgW || bmp.height !== imgH) {
+      imgW = cv.width = bmp.width;
+      imgH = cv.height = bmp.height;
+      updateRect();
+    }
+    ctx.drawImage(bmp, 0, 0);                        // 1:1 copy, no scaling
+    if (bmp.close) bmp.close();
+  }
+
+  async function onVideo(sock, buf) {
+    const my = ++seq;                                // frames can finish decoding out of order
+    try {
+      const bmp = await createImageBitmap(new Blob([new Uint8Array(buf, 1)], { type: 'image/jpeg' }));
+      if (my < drawnSeq) { if (bmp.close) bmp.close(); }   // an older frame finished late: drop it
+      else { drawnSeq = my; draw(bmp); }
+      if (!gotFrame) { gotFrame = true; hideStatus(); }
+      frames++; bytes += buf.byteLength;
+    } catch (e) { /* skip a bad frame */ }
+    if (sock.readyState === 1) sock.send('ack');     // ready for the next frame
+  }
+
+  // ---- audio: 20 ms PCM chunks (s16le, 48 kHz, stereo) scheduled back to back ----
+  const ICON_SOUND_OFF = '<svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
+  const ICON_SOUND_ON = '<svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>';
+  let actx = null, soundOn = false, playAt = 0, audioChunks = 0, audioPeak = 0;
+  function onAudio(buf) {
+    if (!soundOn || !actx) return;
+    const pcm = new Int16Array(buf.slice(1));
+    const n = pcm.length >> 1;
+    if (!n) return;
+    const ab = actx.createBuffer(2, n, 48000);      // resampled by the browser if needed
+    const L = ab.getChannelData(0), R = ab.getChannelData(1);
+    let peak = 0;
+    for (let i = 0, j = 0; i < n; i++, j += 2) {
+      L[i] = pcm[j] / 32768; R[i] = pcm[j + 1] / 32768;
+      const m = Math.max(Math.abs(pcm[j]), Math.abs(pcm[j + 1])); if (m > peak) peak = m;
+    }
+    if (peak > audioPeak) audioPeak = peak;
+    const now = actx.currentTime;
+    // Underrun (network hiccup) or too much backlog: restart at the target delay.
+    if (playAt < now + 0.01 || playAt > now + LAT + 0.25) playAt = now + LAT;
+    const src = actx.createBufferSource();
+    src.buffer = ab;
+    src.connect(actx.destination);
+    src.start(playAt);
+    playAt += ab.duration;
+    audioChunks++;
+  }
+
+  // Short test tone: proves the browser can make sound at all, separately from the phone stream.
+  function beep() {
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.frequency.value = 660;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.2, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t); o.stop(t + 0.3);
+  }
+
+  const AUDIO_PROBLEMS = {
+    'needs permission': 'Allow the audio permission in DashCast on the phone, then restart casting.',
+    'error': 'The phone could not capture sound. Restart casting on the phone.',
+    'off': 'Sound capture is off on the phone. Restart casting.',
+  };
+  function setSound(on) {
+    soundOn = on;
+    if (on) {
+      if (!actx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        try { actx = new AC({ latencyHint: 'interactive' }); } catch (e) { actx = new AC(); }
+      }
+      actx.resume().then(beep);                      // needs this tap (browser autoplay rules)
+      if (phone && phone.audio !== 'on') toast(AUDIO_PROBLEMS[phone.audio] || 'Sound is not available.', 4500);
+      else toast('Sound on. You should hear a short beep; if not, check this tab and the computer volume.', 4500);
+    } else {
+      if (actx) actx.suspend();
+      toast('Sound off', 1400);
+    }
+    playAt = 0;
+    sndBtn.classList.toggle('on', on);
+    sndBtn.innerHTML = on ? ICON_SOUND_ON : ICON_SOUND_OFF;
+    send({ type: 'audio', on });
+  }
+  sndBtn.innerHTML = ICON_SOUND_OFF;
+  sndBtn.addEventListener('click', () => setSound(!soundOn));
+
+  // ---- orientation lock on the phone: off -> landscape -> portrait ----
+  const rotBtn = $('rot');
+  const ROT_ICONS = {
+    off: '<svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 11-2.4-5.7L20 8.5"/><path d="M20 3.5v5h-5"/></svg>',
+    landscape: '<svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M12 10.5v3"/></svg>',
+    portrait: '<svg viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10.5 12h3"/></svg>',
+  };
+  const ROT_NAMES = { off: 'Rotation unlocked', landscape: 'Locked to landscape', portrait: 'Locked to portrait' };
+  let rotMode = 'off';
+  function showRot(m) {
+    rotMode = m;
+    rotBtn.innerHTML = ROT_ICONS[m] || ROT_ICONS.off;
+    rotBtn.classList.toggle('on', m !== 'off');
+    rotBtn.setAttribute('aria-label', ROT_NAMES[m] || ROT_NAMES.off);
+  }
+  rotBtn.addEventListener('click', () => {
+    const next = { off: 'landscape', landscape: 'portrait', portrait: 'off' }[rotMode] || 'off';
+    if (phone && phone.touch === false && next !== 'off') {
+      toast('Turn on Touch control on the phone first: the lock uses it.', 4000);
+      return;
+    }
+    showRot(next);
+    send({ type: 'rot', m: next });
+    toast(ROT_NAMES[next], 1600);
+  });
+  showRot('off');
+
+  // ---- fullscreen (where the browser supports it) ----
+  const root = document.documentElement;
+  if (root.requestFullscreen || root.webkitRequestFullscreen) {
+    $('fs').hidden = false;
+    $('fs').addEventListener('click', () => {
+      const inFs = document.fullscreenElement || document.webkitFullscreenElement;
+      try {
+        if (inFs) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        else (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+      } catch (e) {}
+    });
+  }
+
+  // ---- connection ----
+  let failures = 0;
+  function connect() {
+    const sock = new WebSocket(`ws://${location.host}/ws`);
+    ws = sock;
+    sock.binaryType = 'arraybuffer';
+    sock.onopen = () => {
+      failures = 0;
+      if (!gotFrame) status('Waiting for the picture…', 'Connected. If this stays, check the phone screen is on.');
+      if (Object.keys(cfg).length > 1) sock.send(JSON.stringify(cfg));
+      if (soundOn) sock.send(JSON.stringify({ type: 'audio', on: true }));
+    };
+    sock.onmessage = (ev) => {
+      if (typeof ev.data === 'string') {
+        try {
+          const o = JSON.parse(ev.data);
+          if (o.type === 'stat') { phone = o; if (o.rot && o.rot !== rotMode) showRot(o.rot); }
+        } catch (e) {}
+        return;
+      }
+      const kind = new Uint8Array(ev.data, 0, 1)[0];
+      if (kind === AUDIO) onAudio(ev.data);
+      else if (kind === VIDEO) onVideo(sock, ev.data);
+    };
+    sock.onclose = () => {
+      failures++;
+      phone = null;
+      gotFrame = false;
+      status('Reconnecting…', failures > 3
+        ? `Can't reach ${location.host}. Is DashCast casting and the car on the phone's hotspot?`
+        : 'Lost the connection to the phone.');
+      setTimeout(connect, Math.min(1000 * failures, 4000));
+    };
+  }
+
+  // ---- touch / mouse -> gestures ----
+  let down = null;                                  // { t0, pts: [[x,y],...], last }
+  function norm(e) {
+    const x = (e.clientX - rect.x) / rect.w, y = (e.clientY - rect.y) / rect.h;
+    return [Math.min(Math.max(x, 0), 1), Math.min(Math.max(y, 0), 1)];
+  }
+  function send(o) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); }
+  function ripple(x, y) {
+    const d = document.createElement('div');
+    d.className = 'tap';
+    d.style.left = x + 'px'; d.style.top = y + 'px';
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 500);
+  }
+
+  cv.addEventListener('pointerdown', (e) => {
+    const x = (e.clientX - rect.x) / rect.w, y = (e.clientY - rect.y) / rect.h;
+    if (x < 0 || x > 1 || y < 0 || y > 1) return;   // outside the picture
+    cv.setPointerCapture(e.pointerId);
+    ripple(e.clientX, e.clientY);
+    down = { t0: performance.now(), pts: [norm(e)], last: performance.now() };
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (!down) return;
+    const now = performance.now();
+    if (now - down.last < 16) return;
+    const p = norm(e), q = down.pts[down.pts.length - 1];
+    if (Math.hypot((p[0] - q[0]) * rect.w, (p[1] - q[1]) * rect.h) < 4) return;
+    down.pts.push(p); down.last = now;
+  });
+  function finish(e) {
+    if (!down) return;
+    const dur = performance.now() - down.t0;
+    let pts = down.pts;
+    if (e && e.type === 'pointerup') pts.push(norm(e));
+    // collapse tiny movements into a tap / long-press
+    const a = pts[0], b = pts[pts.length - 1];
+    const moved = Math.hypot((b[0] - a[0]) * rect.w, (b[1] - a[1]) * rect.h);
+    if (moved < 8) {
+      send({ type: 'g', p: [a], d: dur > 450 ? Math.round(dur) : 60 });
+    } else {
+      if (pts.length > 40) {                        // thin out long drags
+        const step = pts.length / 40; const t = [];
+        for (let i = 0; i < 40; i++) t.push(pts[Math.floor(i * step)]);
+        t.push(b); pts = t;
+      }
+      send({ type: 'g', p: pts, d: Math.round(Math.min(Math.max(dur, 80), 3000)) });
+    }
+    down = null;
+  }
+  cv.addEventListener('pointerup', finish);
+  cv.addEventListener('pointercancel', () => { down = null; });
+
+  document.querySelectorAll('#dock [data-k]').forEach(b =>
+    b.addEventListener('click', () => send({ type: 'k', a: b.dataset.k })));
+
+  // ---- stats panel ----
+  function setStats(show) {
+    if (show && !statsEl.innerHTML) statsEl.textContent = 'Collecting stats…';
+    statsEl.classList.toggle('show', show);
+    $('info').classList.toggle('on', show);
+    store.set('tc-stats', show ? '1' : '');
+  }
+  $('info').addEventListener('click', () => setStats(!statsEl.classList.contains('show')));
+
+  // Where's the bottleneck? cap = phone screen updates/s, enc = frames encoded/s with time per frame.
+  function diagnose(fps) {
+    if (!phone) return ['#9aa3b2', 'Waiting for phone stats…'];
+    if (phone.cap === 0) return ['#9aa3b2', 'Screen is still. Nothing new to send.'];
+    if (phone.cap < 10) return ['#9aa3b2', 'Screen is mostly still. Only changes are sent.'];
+    if (fps >= phone.fps * 0.85) return ['#34c759', 'Running at the frame-rate cap.'];
+    if (phone.cap < phone.fps * 0.7) return ['#ffb020', 'Limited by the app on the phone (its screen updates slowly).'];
+    if (phone.encMs > 900 / phone.fps) return ['#ffb020', 'Limited by encoding. Try ?q=45 or ?edge=800 in the URL.'];
+    return ['#ffb020', 'Limited by Wi-Fi or the browser. Try ?edge=800 in the URL.'];
+  }
+
+  setInterval(() => {
+    const now = performance.now(), s = (now - lastStat) / 1000;
+    const fps = frames / s, mbps = bytes * 8 / s / 1e6, audioPct = Math.min(100, audioChunks / s * 2);
+    const level = audioPeak ? `${(20 * Math.log10(audioPeak / 32768)).toFixed(0)} dB` : 'silent';
+    frames = 0; bytes = 0; audioChunks = 0; audioPeak = 0; lastStat = now;
+    if (!statsEl.classList.contains('show')) return;
+    const [color, hint] = diagnose(fps);
+    let h = `<div><b>Browser</b>${fps.toFixed(1)} fps · ${mbps.toFixed(1)} Mbps</div>`;
+    if (phone) {
+      h += `<div><b>Phone</b>screen ${phone.cap}/s · encode ${phone.enc}/s @ ${phone.encMs.toFixed(1)} ms · ${phone.kb} KB</div>`;
+      h += `<div><b>Stream</b>${phone.w}×${phone.h} · quality ${phone.q} · max ${phone.fps} fps</div>`;
+      h += `<div><b>Sound</b>${soundOn ? (phone.audio === 'on' ? `on · ${audioPct.toFixed(0)}% delivered · level ${level}` : phone.audio) : 'off'}</div>`;
+    }
+    h += `<div class="hint"><span class="dot" style="background:${color}"></span>${hint}</div>`;
+    statsEl.innerHTML = h;
+  }, 1000);
+
+  addEventListener('resize', updateRect);
+  updateRect();
+  if (store.get('tc-folded')) setFolded(true);
+  if (store.get('tc-stats')) setStats(true);
+  status('Connecting to the phone…', location.host);
+  connect();
+})();
+</script>
+</body>
+</html>

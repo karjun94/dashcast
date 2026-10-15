@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DashCast</string>
+    <string name="a11y_label">DashCast touch control</string>
+    <string name="a11y_desc">Lets taps and swipes from the browser viewing the stream control this phone. Only active while DashCast is casting.</string>
+</resources>

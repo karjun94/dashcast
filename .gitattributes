@@ -1,0 +1,5 @@
+# Keep line endings consistent for everyone who clones the repo
+* text=auto
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary

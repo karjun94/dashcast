@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DashCast — Mirror your Android phone to any browser</title>
+<meta name="description" content="DashCast mirrors your Android phone's screen and sound to any web browser on the same Wi-Fi, with touch control. Nothing to install on the viewing side.">
+<link rel="canonical" href="https://chopsignpdf.online/dashcast/">
+<meta name="theme-color" content="#0F1115">
+<meta property="og:title" content="DashCast — Mirror your Android phone to any browser">
+<meta property="og:description" content="Screen, sound and touch control in any browser on the same Wi-Fi. Free, private, no cloud.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://chopsignpdf.online/dashcast/">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<style>
+  :root {
+    --bg: #0F1115; --card: #1A1D23; --card-2: #22262E; --line: rgba(255,255,255,.08);
+    --text: #ECEFF4; --muted: #9AA3B2; --accent: #4F8CFF; --accent-ink: #fff; --warn: #FFB020;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--accent); }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+
+  header.hero { padding: 72px 0 56px; text-align: center;
+                background: radial-gradient(60% 70% at 50% 0%, rgba(79,140,255,.18), transparent 70%); }
+  .app-icon { width: 112px; height: 112px; border-radius: 26px; box-shadow: 0 18px 50px rgba(0,0,0,.5); }
+  h1 { font-size: clamp(36px, 6vw, 54px); line-height: 1.1; margin: 22px 0 10px; letter-spacing: -.02em; }
+  .lead { font-size: clamp(17px, 2.4vw, 21px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 15px 26px; border-radius: 14px;
+         background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 17px; text-decoration: none;
+         transition: transform .1s ease, filter .15s ease; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn:active { transform: scale(.98); }
+  .btn svg { width: 22px; height: 22px; }
+  .meta { margin-top: 14px; color: var(--muted); font-size: 14px; }
+
+  section { padding: 44px 0; }
+  h2 { font-size: 26px; margin: 0 0 20px; letter-spacing: -.01em; }
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; }
+  .card h3 { margin: 10px 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+         background: rgba(79,140,255,.14); color: var(--accent); }
+  .ico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2;
+             stroke-linecap: round; stroke-linejoin: round; }
+
+  ol.steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; counter-reset: s; }
+  ol.steps li { counter-increment: s; background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+                padding: 16px 18px 16px 62px; position: relative; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 18px; top: 15px; width: 30px; height: 30px;
+                        border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700;
+                        display: grid; place-items: center; font-size: 15px; }
+  ol.steps b { color: var(--text); }
+  ol.steps span { color: var(--muted); }
+
+  .note { background: rgba(255,176,32,.08); border: 1px solid rgba(255,176,32,.3); border-radius: 16px;
+          padding: 16px 18px; color: var(--text); }
+  .note strong { color: var(--warn); }
+  code, .mono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  .hash { word-break: break-all; background: var(--card-2); padding: 10px 12px; border-radius: 10px;
+          display: block; margin-top: 8px; color: var(--muted); }
+  footer { padding: 36px 0 48px; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); }
+  @media (max-width: 560px) { header.hero { padding-top: 48px; } section { padding: 32px 0; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="app-icon" src="icon.svg" alt="DashCast icon" width="112" height="112">
+    <h1>DashCast</h1>
+    <p class="lead">Mirror your Android phone to any web browser on the same Wi-Fi, with sound and touch control.
+      Nothing to install on the screen you're casting to.</p>
+    <a class="btn" href="DashCast-0.4.0.apk" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
+      Download for Android
+    </a>
+    <div class="meta">Version 0.4.0 · 99 KB · Android 10 or newer · Free</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>What it does</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <h3>Any browser</h3>
+        <p>A laptop, a tablet, a TV or a car's built-in browser. Open an address and the phone appears.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 11V5a2 2 0 014 0v6"/><path d="M13 10.5V9a2 2 0 014 0v4.5a6.5 6.5 0 01-13 0V12a2 2 0 014 0"/></svg></div>
+        <h3>Touch control</h3>
+        <p>Tap, long-press and swipe on the browser's screen to control the phone. Back, Home and Recents buttons included.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg></div>
+        <h3>Sound too</h3>
+        <p>Music, video and game audio play through the browser. One tap turns it on.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M13 3L4 14h7l-1 7 9-11h-7z"/></svg></div>
+        <h3>Smooth</h3>
+        <p>Up to 60 frames per second. Choose frame rate, resolution and quality to suit your Wi-Fi.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg></div>
+        <h3>Private</h3>
+        <p>Everything stays on your local network. No account, no cloud, no tracking.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M5 17h14M6 17l1.5-5h9L18 17M7 17v2M17 17v2"/><circle cx="8.5" cy="14.5" r=".6"/><circle cx="15.5" cy="14.5" r=".6"/><path d="M9 9l3-4 3 4"/></svg></div>
+        <h3>Car mode</h3>
+        <p>Some car browsers refuse local addresses. Car mode gives the phone a fixed address, <code>http://6.6.6.6:8080</code>, that they accept. Bookmark it once.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="19" height="11" rx="2"/><path d="M12 10.5v3"/></svg></div>
+        <h3>Stays put</h3>
+        <p>Lock the phone to landscape or portrait while casting, and dim its screen to save battery.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>How to use it</h2>
+    <ol class="steps">
+      <li><b>Install DashCast</b> <span>— download the APK on your phone and open it. If Android asks, allow your browser to install unknown apps.</span></li>
+      <li><b>Turn on touch control</b> <span>— in DashCast, tap Touch control and switch on "DashCast touch control" in Accessibility settings. Optional, but needed for taps, the orientation lock and dimming.</span></li>
+      <li><b>Start casting</b> <span>— tap Start casting and choose "Entire screen" when Android asks.</span></li>
+      <li><b>Open the address</b> <span>— on the other device, join the same Wi-Fi (or the phone's hotspot) and open the <code>http://…:8080</code> address DashCast shows. Tap the speaker button for sound.</span></li>
+    </ol>
+    <div class="card" style="margin-top:14px">
+      <h3>In a car</h3>
+      <p>Connect the car to the phone's hotspot. In DashCast, switch <b style="color:var(--text)">Car mode</b> on before you start casting
+        and allow the VPN when Android asks. Then open <code>http://6.6.6.6:8080</code> in the car's browser.
+        Car mode only claims that one address: your other traffic and data are untouched, and other VPNs pause while it's on.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="note"><strong>Drive safely.</strong> If you use DashCast with a car's screen, let a passenger operate it or use it while parked. Don't interact with it while driving.</div>
+  </section>
+
+  <section>
+    <h2>Good to know</h2>
+    <div class="grid">
+      <div class="card"><h3>Apps that block capture</h3><p>Apps that block screenshots, such as some banking and streaming apps, show black.</p></div>
+      <div class="card"><h3>Navigation voice and calls</h3><p>Android doesn't let apps capture navigation prompts or calls. In a car, connect the phone over Bluetooth for those, and leave DashCast's sound off to avoid hearing music twice.</p>
+        <p style="margin-top:10px"><b style="color:var(--text)">Using DiPlay for CarPlay?</b> In DiPlay's settings, set the audio stream to <b style="color:var(--text)">3</b> (Android's media stream, the same number on every phone). Then its navigation prompts and music play as media sound, which DashCast can stream to the browser.</p></div>
+      <div class="card"><h3>Same network</h3><p>The phone and the browser must be on the same Wi-Fi or hotspot. DashCast doesn't work over the internet.</p></div>
+      <div class="card"><h3>Verify the download</h3><p>SHA-256 of DashCast-0.4.0.apk:<code class="hash">b416f7edb05a7e2f7769a5e685b423868f4ecd8561a99bdf57bdf3b9b0cf6271</code></p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">DashCast 0.4.0 · Hosted on <a href="/">chopsignpdf.online</a></div>
+</footer>
+</body>
+</html>

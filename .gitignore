@@ -1,0 +1,18 @@
+# Build output and IDE files
+.gradle/
+.kotlin/
+.idea/
+build/
+app/build/
+local.properties
+
+# Release signing: never commit these. Back them up somewhere safe instead.
+keystore.properties
+keystore/
+*.jks
+
+# App builds go on GitHub Releases, not in the repository
+*.apk
+
+# Local notes for coding sessions
+CLAUDE.md

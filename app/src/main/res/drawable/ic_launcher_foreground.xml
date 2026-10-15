@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A landscape car display with cast waves in its corner. Kept inside the 66dp adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- screen glass -->
+    <path android:pathData="M32,37H76A5,5 0,0 1,81 42V64A5,5 0,0 1,76 69H32A5,5 0,0 1,27 64V42A5,5 0,0 1,32 37Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="27" android:startY="37"
+                android:endX="81" android:endY="69"
+                android:startColor="#334F8CFF"
+                android:endColor="#0D4F8CFF" />
+        </aapt:attr>
+    </path>
+    <!-- screen frame -->
+    <path
+        android:pathData="M32,37H76A5,5 0,0 1,81 42V64A5,5 0,0 1,76 69H32A5,5 0,0 1,27 64V42A5,5 0,0 1,32 37Z"
+        android:strokeWidth="3.5"
+        android:strokeColor="#FFECEFF4"
+        android:strokeLineJoin="round" />
+    <!-- mount -->
+    <path
+        android:pathData="M47,76H61"
+        android:strokeWidth="3.5"
+        android:strokeColor="#FFECEFF4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M54,69V76"
+        android:strokeWidth="3.5"
+        android:strokeColor="#FFECEFF4" />
+    <!-- cast waves -->
+    <path
+        android:pathData="M34,62.5m-2.6,0a2.6,2.6 0,1 1,5.2 0a2.6,2.6 0,1 1,-5.2 0"
+        android:fillColor="#FF4F8CFF" />
+    <path
+        android:pathData="M34,54.5A8,8 0,0 1,42 62.5"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FF4F8CFF"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M34,47A15.5,15.5 0,0 1,49.5 62.5"
+        android:strokeWidth="3.2"
+        android:strokeColor="#FF4F8CFF"
+        android:strokeLineCap="round" />
+</vector>
